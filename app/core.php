@@ -28,7 +28,7 @@ $config = ['settings' => [
     ],
     'db' => [
         'host' => 'localhost',
-        'dbname' => 'InSecurity',
+        'dbname' => 'Dashi',
         'user' => 'api',
         'pass' => 'password'
     ],

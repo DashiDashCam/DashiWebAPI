@@ -1,6 +1,6 @@
-CREATE DATABASE `InSecurity`;
+CREATE DATABASE `Dashi`;
 
-USE `InSecurity`;
+USE `Dashi`;
 
 CREATE TABLE Accounts (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
