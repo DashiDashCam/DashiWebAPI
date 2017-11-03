@@ -1,0 +1,10 @@
+{
+  "require": {
+    "slim/slim": "^3.0",
+    "slim/twig-view": "~2.0",
+    "slim/http-cache": "0.3.0",
+    "guzzlehttp/psr7": "1.2.1",
+    "monolog/monolog": "1.17.2",
+    "akrabat/rka-ip-address-middleware": "0.5"
+  }
+}
