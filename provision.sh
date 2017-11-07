@@ -140,4 +140,5 @@ CREATE USER 'api'@'localhost' IDENTIFIED BY '$API_USER_PASSWORD';
 GRANT SELECT ON Dashi.* TO 'api'@'localhost';
 GRANT UPDATE ON Dashi.* TO 'api'@'localhost';
 GRANT INSERT ON Dashi.* TO 'api'@'localhost';
+GRANT DELETE ON Dashi.* TO 'api'@'localhost';
 EOF

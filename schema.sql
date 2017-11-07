@@ -11,11 +11,12 @@ CREATE TABLE Accounts (
 );
 
 CREATE TABLE Videos (
-  id INT NOT NULL,
+  id INT NOT NULL AUTO_INCREMENT,
   accountID INT NOT NULL,
-  videoContext BLOB NOT NULL,
+  videoContent LONGBLOB NOT NULL,
   started DATETIME NOT NULL,
   size INT NOT NULL,
+  length INT NOT NULL,
   PRIMARY KEY (id, accountID),
   FOREIGN KEY (accountID) REFERENCES Accounts (id)
 );
