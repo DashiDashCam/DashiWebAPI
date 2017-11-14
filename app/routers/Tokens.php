@@ -160,10 +160,22 @@ $app->group('/oauth', function () use ($app) {
                 ':issuedTo' => $request->getAttribute('ip_address'),
                 ':typeID' => $access_type_id
             ]);
+
+            $json['token_type'] = 'Bearer';
+            $json['scope'] = 'all';
+            $json['expires_in'] = 3600;
+
+            return $response->withJson($json, 201);
         }
         else {
-
+            return $response->withJson([
+                'code' => 1024,
+                'message' => 'Validation Failed',
+                'description' => 'The provided input does not meet the required JSON schema',
+                'errors' => $json
+            ], 400);
         }
+
     });
 
     $app->delete('/token', function (Request $request, Response $response) use ($app) {
