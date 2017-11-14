@@ -141,7 +141,7 @@ $app->group('/oauth', function () use ($app) {
         }
 
         // Add token to db and return to user if no errors
-        if (count($errors) == 0 ){
+        if (count($errors) == 0 ) {
 
             // Create new access token
             $json['access_token'] = bin2hex(random_bytes(64));
