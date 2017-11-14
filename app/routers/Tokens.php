@@ -172,7 +172,7 @@ $app->group('/oauth', function () use ($app) {
                 'code' => 1024,
                 'message' => 'Validation Failed',
                 'description' => 'The provided input does not meet the required JSON schema',
-                'errors' => $json
+                'errors' => $errors
             ], 400);
         }
 
