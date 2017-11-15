@@ -11,7 +11,7 @@ $app->get('/Account', function (Request $request, Response $response) use ($app)
 
 $app->post('/Accounts', function (Request $request, Response $response) use ($app) {
 
-    $data = $request->getParsedData();
+    $data = $request->getParsedBody();
 
     $errors = [];
 
@@ -23,7 +23,7 @@ $app->post('/Accounts', function (Request $request, Response $response) use ($ap
             'message' => 'Must provide email'
         ];
     }
-    else if (preg_match('^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$', $data['email']) === -1) {
+    else if (preg_match('/^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/', $data['email']) === 0) {
         $errors[] = [
             'code' => 1015,
             'field' => 'email',
@@ -38,7 +38,7 @@ $app->post('/Accounts', function (Request $request, Response $response) use ($ap
             'message' => 'Must provide full name'
         ];
     }
-    else if (preg_match('^\S+.*$', $data['email']) === -1) {
+    else if (preg_match('/^\S+.*$/', $data['fullName']) === 0) {
         $errors[] = [
             'code' => 1017,
             'field' => 'fullName',
@@ -53,8 +53,7 @@ $app->post('/Accounts', function (Request $request, Response $response) use ($ap
             'message' => 'Must provide password'
         ];
     }
-    else if (preg_match('^(?=.*[A-Z].*[A-Z])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8,}$',
-            $data['password']) === -1) {
+    else if (preg_match('/^(?=.*[A-Z].*)(?=.*[0-9].*)(?=.*[a-z].*)(?=.*\W.*).{8,}$/', $data['password']) === 0) {
         $errors[] = [
             'code' => 1019,
             'field' => 'password',
@@ -82,12 +81,17 @@ $app->post('/Accounts', function (Request $request, Response $response) use ($ap
                 ->withHeader('Location', "/Accounts/$accountID");
 
         } catch(PDOException $e) {
-            if ($e->getCode() == 1062) {
-                $errors[] = [
-                    'code' => 1013,
-                    'field' => 'email',
-                    'message' => 'Email address is already in use'
-                ];
+            if ($e->getCode() == 23000) {
+                return $response->withJson([
+                    'code' => 1025,
+                    'message' => 'Input Constraint Violation',
+                    'description' => 'The provided input does violates data constraints',
+                    'errors' => [
+                        'code' => 1013,
+                        'field' => 'email',
+                        'message' => 'Email address is already in use'
+                    ]
+                ], 400);
             } else {
                 throw $e;
             }
