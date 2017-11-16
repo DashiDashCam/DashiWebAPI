@@ -30,7 +30,8 @@ $app->group('/oauth', function () use ($app) {
                 // Advance only if no errors occurred
                 if (count($errors) == 0) {
                     $stmt = $this->db->prepare("
-                        SELECT Auth_Tokens.id, accountID FROM Auth_Tokens JOIN Token_Types ON Auth_Tokens.typeID=Token_Types.id
+                        SELECT Auth_Tokens.id, accountID 
+                        FROM Auth_Tokens JOIN Token_Types ON Auth_Tokens.typeID=Token_Types.id
                         WHERE token=:token AND active=true AND `type`='refresh' AND expires > NOW(); 
                     ");
 

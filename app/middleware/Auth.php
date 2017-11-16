@@ -12,8 +12,6 @@ class Authentication {
     private $container;
 
     public function __construct($container) {
-        var_dump($container);
-        die();
         $this->container = $container;
     }
 
@@ -22,7 +20,7 @@ class Authentication {
         // Deny if missing Authorization header
         if ($request->hasHeader('Authorization')) {
 
-            $auth_header = explode(' ', $request->getHeader('Authorization'));
+            $auth_header = explode(' ', $request->getHeader('Authorization')[0]);
 
             $type = $auth_header[0];
             $token = $auth_header[1];
@@ -30,17 +28,21 @@ class Authentication {
             // Only process if token type is valid
             if ($type === 'Bearer') {
                 $stmt = $this->container->db->prepare("
-                    SELECT id, accountID FROM Auth_Tokens JOIN Token_Types ON Auth_Tokens.typeID=Token_Types.id
-                    WHERE token=:token AND active=true AND `type`='access' AND expires > NOW(); 
+                    SELECT Auth_Tokens.id, accountID, expires, NOW() as sql_time
+                    FROM Auth_Tokens JOIN Token_Types ON Auth_Tokens.typeID=Token_Types.id
+                    WHERE token=:token AND active=true AND `type`='access'; 
                 ");
 
                 $stmt->execute([':token' => $token]);
 
-                // Authorization is valid, allow request to precede
-                if ($data = $stmt->fetch()) {
-                    // Update token's lastUsed timestamp
+                $data = $stmt->fetch();
+
+                // Update last used timestamp if token was valid
+                if($data)
                     $this->container->db->exec("UPDATE Auth_Tokens SET lastUsed=NOW() WHERE id=${data['id']}");
 
+                // Authorization is valid, allow request to precede
+                if ($data && $data['expires'] > $data['sql_time']) {
                     // Pass account id to request as attribute and continue to application
                     return $next(
                         $request
@@ -50,13 +52,13 @@ class Authentication {
                     );
                 }
                 else {
-                   return $response
-                       ->withJson([
-                           'code' => 1002,
-                           'message' => 'Unauthorized',
-                           'description' => 'The provided access token is invalid, expired, or revoked'
-                       ], 401)
-                       ->withHeader('WWW-Authenticate', 'Bearer');
+                    return $response
+                        ->withJson([
+                            'code' => 1002,
+                            'message' => 'Unauthorized',
+                            'description' => 'The provided access token is invalid, expired, or revoked'
+                        ], 401)
+                        ->withHeader('WWW-Authenticate', 'Bearer');
                 }
             }
             else {
