@@ -12,6 +12,8 @@ class Authentication {
     private $container;
 
     public function __construct($container) {
+        var_dump($container);
+        die();
         $this->container = $container;
     }
 

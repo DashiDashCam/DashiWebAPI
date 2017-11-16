@@ -29,8 +29,8 @@ $app->group('/oauth', function () use ($app) {
 
                 // Advance only if no errors occurred
                 if (count($errors) == 0) {
-                    $stmt = $this->container->db->prepare("
-                        SELECT id, accountID FROM Auth_Tokens JOIN Token_Types ON Auth_Tokens.typeID=Token_Types.id
+                    $stmt = $this->db->prepare("
+                        SELECT Auth_Tokens.id, accountID FROM Auth_Tokens JOIN Token_Types ON Auth_Tokens.typeID=Token_Types.id
                         WHERE token=:token AND active=true AND `type`='refresh' AND expires > NOW(); 
                     ");
 
@@ -42,7 +42,7 @@ $app->group('/oauth', function () use ($app) {
                         $stmt = $this->db->prepare("
                             UPDATE Auth_Tokens 
                             SET expires=DATE_ADD(NOW(), INTERVAL 60 DAY), lastUsed=NOW()
-                            WHERE token=:token 
+                            WHERE id=:id 
                         ");
 
                         $stmt->execute([':id' => $row['id']]);
@@ -81,27 +81,27 @@ $app->group('/oauth', function () use ($app) {
                     // Check username / retrieve hash
                     $stmt = $this->db->prepare("SELECT id, password FROM Accounts WHERE email=:email;");
 
-                    $sqlData = $stmt->execute([':email' => $data['username']]);
+                    $stmt->execute([':email' => $data['username']]);
 
-                    if ($sqlData = $sqlData->fetch()) {
+                    if ($sqlData = $stmt->fetch()) {
                         $accountID = $sqlData['id'];
 
                         // Generate refresh token if password is valid
                         if (isset($sqlData['password']) && password_verify($data['password'], $sqlData['password'])) {
                             // Load refresh type id
                             $refresh_type_id = $this->db->query("SELECT id FROM Token_Types WHERE `type`='refresh'")
-                                ->fetchColumn('id');
+                                ->fetchColumn(0);
 
                             // Create new access token
                             $json['refresh_token'] = bin2hex(random_bytes(64));
 
                             $stmt = $this->db->prepare("
                                 INSERT INTO Auth_Tokens (token, accountID, expires, issuedTo, typeID)
-                                VALUES (:token, :accountID, ADD_DATE(NOW(), INTERVAL 60 DAY), :issuedTo, :typeID);
+                                VALUES (:token, :accountID, ADDDATE(NOW(), INTERVAL 60 DAY), :issuedTo, :typeID);
                             ");
 
                             $stmt->execute([
-                                ':token' => $json['access_token'],
+                                ':token' => $json['refresh_token'],
                                 ':accountID' => $accountID,
                                 ':issuedTo' => $request->getAttribute('ip_address'),
                                 ':typeID' => $refresh_type_id
@@ -147,11 +147,11 @@ $app->group('/oauth', function () use ($app) {
             $json['access_token'] = bin2hex(random_bytes(64));
 
             // Load access type id
-            $access_type_id = $this->db->query("SELECT id FROM Token_Types WHERE `type`='access'")->fetchColumn('id');
+            $access_type_id = $this->db->query("SELECT id FROM Token_Types WHERE `type`='access'")->fetchColumn(0);
 
             $stmt = $this->db->prepare("
                 INSERT INTO Auth_Tokens (token, accountID, expires, issuedTo, typeID)
-                VALUES (:token, :accountID, ADD_DATE(NOW(), INTERVAL 1 HOUR), :issuedTo, :typeID);
+                VALUES (:token, :accountID, ADDDATE(NOW(), INTERVAL 1 HOUR), :issuedTo, :typeID);
             ");
 
             $stmt->execute([
