@@ -7,6 +7,12 @@ require_once __DIR__ . '/../middleware/Auth.php';
 
 $app->get('/Account', function (Request $request, Response $response) use ($app) {
 
+    $stmt = $this->db->prepare("SELECT id, email, fullName, created FROM Accounts WHERE id=:id");
+
+    $stmt->execute([':id' => $request->getAttribute('accountID')]);
+
+    return $response->withJson($stmt->fetch());
+
 })->add('Authentication');
 
 $app->post('/Accounts', function (Request $request, Response $response) use ($app) {
