@@ -192,7 +192,7 @@ $app->patch('/Accounts/{id}', function (Request $request, Response $response, $a
     }
     else {
         return $response->withJson([
-            'code' => 1040,
+            'code' => 1024,
             'message' => 'Validation Failed',
             'description' => 'The provided input does not meet the required JSON schema',
             'errors' => $errors
