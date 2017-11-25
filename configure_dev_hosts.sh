@@ -2,8 +2,8 @@
 
 # Define constants
 ONE=1
-DNS_FRONTEND="192.168.33.105  insecurityscanner.com"
-DNS_API="192.168.33.105  api.insecurityscanner.com"
+DNS_FRONTEND="192.168.33.105  dashidashcam.com"
+DNS_API="192.168.33.105  api.dashidashcam.com"
 
 # Require script to be run as root
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
