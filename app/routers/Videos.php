@@ -14,7 +14,12 @@ $app->group('/Account', function () use ($app) {
 
         $stmt->execute(['accountID' => $request->getAttribute('accountID')]);
 
-        return $response->withJson($stmt->fetch());
+        $data = $stmt->fetch();
+
+        // Client expects hex encoding
+        $data['id'] = bin2hex($data['id']);
+
+        return $response->withJson($data);
 
     })->setName('downloadVideos');
 
@@ -54,7 +59,7 @@ $app->group('/Account', function () use ($app) {
         if (count($errors) == 0) {
             try {
                 $stmt->execute([
-                    ':id' => $args['id'],
+                    ':id' => hex2bin($args['id']),
                     ':accountID' => $request->getAttribute('accountID'),
                     ':started' => $data['started'],
                     ':size' => $data['size'],
