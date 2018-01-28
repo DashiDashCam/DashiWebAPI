@@ -34,6 +34,14 @@ $app->group('/Account', function () use ($app) {
 
         $errors = [];
 
+        // Ensure ID is a valid SHA256 hash
+        if (!ctype_xdigit($args['id']) || count($args['id']) != 64) {
+            $errors[] = [
+                'code' => 1650,
+                'field' => 'id',
+                'message' => 'ID must be hex representation of valid SHA256 hash'
+            ];
+        }
         if (!isset($data['started'])) {
             $errors[] = [
                 'code' => 1070,
