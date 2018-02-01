@@ -110,20 +110,20 @@ $app->group('/Account', function () use ($app) {
         $videoContent = $request->getBody()->getContents();
         $notFound = false;
 
-        if ($offset = $request->getQueryParam('offset')) {
-            $stmt = $this->db->prepare("SELECT videoContent FROM Videos WHERE id=:id AND accountID=:accountID;");
 
-            $stmt->execute([
-                ':id' => $args['id'],
-                ':accountID' => $request->getAttribute('accountID')
-            ]);
+        $stmt = $this->db->prepare("SELECT videoContent FROM Videos WHERE id=:id AND accountID=:accountID;");
 
-            if ($row = $stmt->fetch()) {
+        $stmt->execute([
+            ':id' => $args['id'],
+            ':accountID' => $request->getAttribute('accountID')
+        ]);
+
+        if ($row = $stmt->fetch()) {
+            if ($offset = $request->getQueryParam('offset'))
                 $videoContent = $row['videoContent'] . $videoContent;
-            }
-            else {
-                $notFound = true;
-            }
+        }
+        else {
+            $notFound = true;
         }
 
         if (!$notFound) {
