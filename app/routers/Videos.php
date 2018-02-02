@@ -35,7 +35,7 @@ $app->group('/Account', function () use ($app) {
         $errors = [];
 
         // Ensure ID is a valid SHA256 hash
-        if (!ctype_xdigit($args['id']) || count($args['id']) != 64) {
+        if (!ctype_xdigit($args['id']) || strlen($args['id']) != 64) {
             $errors[] = [
                 'code' => 1650,
                 'field' => 'id',
