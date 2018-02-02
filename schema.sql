@@ -13,7 +13,7 @@ CREATE TABLE Accounts (
 CREATE TABLE Videos (
   id           BINARY(32) UNIQUE NOT NULL,
   accountID    INT        NOT NULL,
-  videoContent LONGBLOB,
+  videoContent LONGBLOB DEFAULT NULL,
   started      DATETIME   NOT NULL,
   size         INT        NOT NULL,
   length       INT        NOT NULL,

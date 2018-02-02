@@ -29,7 +29,7 @@ $app->group('/Account', function () use ($app) {
 
         $stmt = $this->db->prepare("
             INSERT INTO Videos (id, accountID, started, `size`, `length`) 
-            WHERE (:id, :accountID, :started, :size, :length);
+            VALUES (:id, :accountID, :started, :size, :length);
         ");
 
         $errors = [];
@@ -66,13 +66,13 @@ $app->group('/Account', function () use ($app) {
 
         if (count($errors) == 0) {
             try {
-                $stmt->execute([
-                    ':id' => hex2bin($args['id']),
-                    ':accountID' => $request->getAttribute('accountID'),
-                    ':started' => $data['started'],
-                    ':size' => $data['size'],
-                    ':length' => $data['length']
-                ]);
+                $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
+                $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
+                $stmt->bindValue(':started', $data['started']);
+                $stmt->bindValue(':size', $data['size']);
+                $stmt->bindValue(':length', $data['length']);
+
+                $stmt->execute();
 
                 return $response
                     ->withStatus(201)
@@ -90,7 +90,7 @@ $app->group('/Account', function () use ($app) {
                         ]
                     ], 400);
                 } else {
-                    throw $e;
+                    var_dump($e);
                 }
             }
         }
@@ -172,4 +172,4 @@ $app->group('/Account', function () use ($app) {
 
     })->setName('downloadVideoContent');
 
-});
+})->add('Authentication');
