@@ -82,7 +82,7 @@ $app->group('/Account', function () use ($app) {
                     return $response->withJson([
                         'code' => 1025,
                         'message' => 'Input Constraint Violation',
-                        'description' => 'The provided input does violates data constraints',
+                        'description' => 'The provided input violates data constraints',
                         'errors' => [
                             'code' => 1073,
                             'field' => 'id',
@@ -113,6 +113,20 @@ $app->group('/Account', function () use ($app) {
 
         $stmt = $this->db->prepare("SELECT videoContent FROM Videos WHERE id=:id AND accountID=:accountID;");
 
+        // Ensure ID is a valid SHA256 hash
+        if (!ctype_xdigit($args['id']) || strlen($args['id']) != 64) {
+            return $response->withJson([
+                'code' => 1024,
+                'message' => 'Validation Failed',
+                'description' => 'The provided input does not meet the required JSON schema',
+                'errors' => [
+                    'code' => 1650,
+                    'field' => 'id',
+                    'message' => 'ID must be hex representation of valid SHA256 hash'
+                ]
+            ], 400);
+        }
+
         $stmt->execute([
             ':id' => $args['id'],
             ':accountID' => $request->getAttribute('accountID')
@@ -130,11 +144,9 @@ $app->group('/Account', function () use ($app) {
             $stmt = $this->db->prepare("UPDATE Videos SET videoContent=:video WHERE id=:id AND accountID=:accountID;");
 
             try {
-                $stmt->execute([
-                    ':video' => $videoContent,
-                    ':id' => $args['id'],
-                    ':accountID' => $request->getAttribute('accountID')
-                ]);
+                $stmt->bindValue(':video', $videoContent, PDO::PARAM_LOB);
+                $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
+                $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
 
                 return $response->withStatus(200);
 
