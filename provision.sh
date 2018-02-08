@@ -35,7 +35,7 @@ apt-get -y update
 ################################################## INSTALL SOFTWARE ##################################################
 
 # Install Apache2 + PHP7 + python3 + pip
-apt-get install -y apache2 php7.0 php-cli php libapache2-mod-php7.0 python3 python3-pip python3-mysqldb
+apt-get install -y apache2 php7.0 php-cli php libapache2-mod-php7.0
 
 # Install scanner dependencies
 apt-get install -y nmap
@@ -88,9 +88,6 @@ fi
 # Run composer (download dependencies)
 composer --working-dir=$API_WEB_ROOT install
 
-# Build the database schema
-mysql -u root -p$PASSWORD < "$API_WEB_ROOT/schema.sql"
-
 ################################################## APACHE CONFIG ##################################################
 
 # Destroy default site (if needed)
@@ -134,8 +131,20 @@ if [ $MODE = $PRODUCTION_MODE ]; then
     bash $API_WEB_ROOT/cred_config.sh $API_USER_PASSWORD
 fi
 
+# Use tmp file to securely supply mysql password
+OPTFILE="$(mktemp -q --tmpdir "${inname}.XXXXXX")"
+trap 'rm -f "$OPTFILE"' EXIT
+chmod 0600 "$OPTFILE"
+cat >"$OPTFILE" <<EOF
+[client]
+password="${PASSWORD}"
+EOF
+
+# Build the database schema
+mysql --defaults-extra-file="$OPTFILE" --user="root" < "$API_WEB_ROOT/schema.sql"
+
 # Create API user in db
-mysql -u root -p$PASSWORD InSecurity <<EOF
+mysql --defaults-extra-file="$OPTFILE" --user="root" Dashi <<EOF
 CREATE USER 'api'@'localhost' IDENTIFIED BY '$API_USER_PASSWORD';
 GRANT SELECT ON Dashi.* TO 'api'@'localhost';
 GRANT UPDATE ON Dashi.* TO 'api'@'localhost';
