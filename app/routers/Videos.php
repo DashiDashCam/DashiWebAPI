@@ -111,7 +111,6 @@ $app->group('/Account', function () use ($app) {
         $videoContent = $request->getBody()->getContents();
         $notFound = false;
 
-
         $stmt = $this->db->prepare("SELECT videoContent FROM Videos WHERE id=:id AND accountID=:accountID;");
 
         // Ensure ID is a valid SHA256 hash
@@ -128,10 +127,10 @@ $app->group('/Account', function () use ($app) {
             ], 400);
         }
 
-        $stmt->execute([
-            ':id' => $args['id'],
-            ':accountID' => $request->getAttribute('accountID')
-        ]);
+        $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
+        $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
+
+        $stmt->execute();
 
         if ($row = $stmt->fetch()) {
             if ($offset = $request->getQueryParam('offset'))
@@ -147,8 +146,9 @@ $app->group('/Account', function () use ($app) {
             try {
                 $stmt->bindValue(':video', $videoContent, PDO::PARAM_LOB);
                 $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
-                //$stmt->bindValue(':accountID', $request->getAttribute('accountID'));
-                $stmt->bindValue(':accountID', 1);
+                $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
+
+                $stmt->execute();
 
                 return $response->withStatus(200);
 
@@ -169,7 +169,9 @@ $app->group('/Account', function () use ($app) {
 
         $stmt = $this->db->prepare("SELECT videoContent, accountID FROM Videos WHERE id=:id");
 
-        $stmt->execute([':id' => $args['id']]);
+        $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
+
+        $stmt->execute();
 
         $row = $stmt->fetch();
 
@@ -186,4 +188,4 @@ $app->group('/Account', function () use ($app) {
 
     })->setName('downloadVideoContent');
 
-});//->add('Authentication');
+})->add('Authentication');
