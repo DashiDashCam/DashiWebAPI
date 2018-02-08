@@ -14,10 +14,11 @@ $app->group('/Account', function () use ($app) {
 
         $stmt->execute(['accountID' => $request->getAttribute('accountID')]);
 
-        $data = $stmt->fetch();
+        $data = $stmt->fetchAll();
 
         // Client expects hex encoding
-        $data['id'] = bin2hex($data['id']);
+        foreach($data as $key => $datum)
+			$data[$key]['id'] = bin2hex($datum['id']);
 
         return $response->withJson($data);
 
