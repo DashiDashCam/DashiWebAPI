@@ -10,15 +10,17 @@ $app->group('/Account', function () use ($app) {
     $app->get('/Videos', function (Request $request, Response $response) use ($app) {
 
         // Get meta data for all of user's videos
-        $stmt = $this->db->prepare("SELECT id, started, `size`, `length` FROM Videos WHERE accountID=:accountID;");
+        $stmt = $this->db->prepare("SELECT id, thumbnail, started, `size`, `length` FROM Videos WHERE accountID=:accountID;");
 
         $stmt->execute(['accountID' => $request->getAttribute('accountID')]);
 
         $data = $stmt->fetchAll();
 
         // Client expects hex encoding
-        foreach($data as $key => $datum)
+        foreach($data as $key => $datum) {
             $data[$key]['id'] = bin2hex($datum['id']);
+            $data[$key]['thumbnail'] = base64_encode($datum['thumbnail']);
+        }
 
         return $response->withJson($data);
 
@@ -29,8 +31,8 @@ $app->group('/Account', function () use ($app) {
         $data = $request->getParsedBody();
 
         $stmt = $this->db->prepare("
-            INSERT INTO Videos (id, accountID, started, `size`, `length`) 
-            VALUES (:id, :accountID, :started, :size, :length);
+            INSERT INTO Videos (id, accountID, thumbnail, started, `size`, `length`) 
+            VALUES (:id, :accountID, :thumbnail, :started, :size, :length);
         ");
 
         $errors = [];
@@ -41,6 +43,13 @@ $app->group('/Account', function () use ($app) {
                 'code' => 1650,
                 'field' => 'id',
                 'message' => 'ID must be hex representation of valid SHA256 hash'
+            ];
+        }
+        if (!isset($data['thumbnail'])) {
+            $errors[] = [
+                'code' => 1589,
+                'field' => 'thumbnail',
+                'message' => 'Must provide thumbnail (base64 encoded)'
             ];
         }
         if (!isset($data['started'])) {
@@ -69,6 +78,7 @@ $app->group('/Account', function () use ($app) {
             try {
                 $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
                 $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
+                $stmt->bindValue(':id', base64_decode($data['thumbnail']), PDO::PARAM_LOB);
                 $stmt->bindValue(':started', $data['started']);
                 $stmt->bindValue(':size', $data['size']);
                 $stmt->bindValue(':length', $data['length']);
