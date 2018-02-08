@@ -14,10 +14,11 @@ $app->group('/Account', function () use ($app) {
 
         $stmt->execute(['accountID' => $request->getAttribute('accountID')]);
 
-        $data = $stmt->fetch();
+        $data = $stmt->fetchAll();
 
         // Client expects hex encoding
-        $data['id'] = bin2hex($data['id']);
+        foreach($data as $key => $datum)
+            $data[$key]['id'] = bin2hex($datum['id']);
 
         return $response->withJson($data);
 
@@ -146,7 +147,8 @@ $app->group('/Account', function () use ($app) {
             try {
                 $stmt->bindValue(':video', $videoContent, PDO::PARAM_LOB);
                 $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
-                $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
+                //$stmt->bindValue(':accountID', $request->getAttribute('accountID'));
+                $stmt->bindValue(':accountID', 1);
 
                 return $response->withStatus(200);
 
@@ -184,4 +186,4 @@ $app->group('/Account', function () use ($app) {
 
     })->setName('downloadVideoContent');
 
-})->add('Authentication');
+});//->add('Authentication');
