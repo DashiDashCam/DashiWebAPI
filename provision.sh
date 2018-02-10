@@ -1,29 +1,28 @@
 #!/usr/bin/env bash
 
-# Apache web root path
-API_WEB_ROOT="/var/www/api.dashidashcam.com"
-ANG_WEB_ROOT="/var/www/dashidashcam.com"
-DEFAULT_SITE_PATH="/etc/apache2/sites-enabled/000-default.conf"
-
-# Path to code (will by symlinked into web root)
-SHARE_ROOT=$1
-
-# Password for database server (root)
-PASSWORD="$2"
-
-# Mode for server configuration
-MODE=$3
-
 # Constants defining the different modes
 DEV_MODE="DEV"
 PRODUCTION_MODE="PRODUCTION"
+DEFAULT_SITE_PATH="/etc/nginx/sites-enabled/default"
 
-# Password for api database user (accept commandline param or default to password for devmode)
-if [ $MODE = $DEV_MODE ]; then
-    API_USER_PASSWORD="$PASSWORD"
-else
-    API_USER_PASSWORD="$4"
+# Load config file
+. $1
+
+# Ensure required variables exist and are valid (NOTE: FRONT_END_REPO is optional, no check required)
+if [ -z ${MODE+x} ]; then echo "MODE is unset in $1, exiting"; exit 1; fi
+
+if [ "$MODE" -ne "$DEV_MODE" ] && [ "$MODE" -ne "$PRODUCTION_MODE" ]; then
+    echo "MODE must be either \"DEV\" or \"PRODUCTION\""
 fi
+
+if [ -z ${DOMAIN+x} ]; then echo "DOMAIN is unset in $1, exiting"; exit 1; fi
+if [ -z ${BACK_END_REPO+x} ]; then echo "BACK_END_REPO is unset in $1, exiting"; exit 1; fi
+if [ -z ${DB_PASSWORD+x} ]; then echo "DB_PASSWORD is unset in $1, exiting"; exit 1; fi
+if [ -z ${SHARE_ROOT+x} ]; then echo "SHARE_ROOT is unset in $1, exiting"; exit 1; fi
+
+# Nginx web root path
+API_WEB_ROOT="/var/www/api.$DOMAIN"
+FRONT_END_WEB_ROOT="/var/www/$DOMAIN"
 
 # Switch to root
 sudo su
@@ -34,24 +33,20 @@ apt-get -y update
 
 ################################################## INSTALL SOFTWARE ##################################################
 
-# Install Apache2 + PHP7 + python3 + pip
-apt-get install -y apache2 php7.0 php-cli php libapache2-mod-php7.0
-
-# Install scanner dependencies
-apt-get install -y nmap
-pip3 install python-libnmap
+# Install Nginx + PHP 7
+apt-get install -y nginx php-fpm
 
 # Install MySQL + dependencies
-debconf-set-selections <<< "mysql-server mysql-server/root_password password $PASSWORD"
-debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $PASSWORD"
+debconf-set-selections <<< "mysql-server mysql-server/root_password password $DB_PASSWORD"
+debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $DB_PASSWORD"
 apt-get -y install mysql-server php-mysql
 
 # Install phpMyAdmin if in dev mode
 if [ $MODE = $DEV_MODE ]; then
     debconf-set-selections <<< "phpmyadmin phpmyadmin/dbconfig-install boolean true"
-    debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $PASSWORD"
-    debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/admin-pass password $PASSWORD"
-    debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $PASSWORD"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/app-password-confirm password $DB_PASSWORD"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/admin-pass password $DB_PASSWORD"
+    debconf-set-selections <<< "phpmyadmin phpmyadmin/mysql/app-pass password $DB_PASSWORD"
     debconf-set-selections <<< "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2"
     apt-get install -y phpmyadmin
 fi
@@ -69,16 +64,18 @@ curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin
 ################################################## DOWNLOAD CODE ##################################################
 
 # Download frontend code
-#git clone https://github.com/ $ANG_WEB_ROOT
+if ! [ -z ${FRONT_END_REPO+x} ]; then
+    git clone $FRONT_END_REPO $FRONT_END_WEB_ROOT
+fi
 
 # Download backend code (needed since not "shared" through vagrant in production)
 if [ $MODE = $PRODUCTION_MODE ]; then
     # API Code
-    git clone git@github.com:DashiDashCam/DashiWebAPI.git $API_WEB_ROOT
+    git clone $BACK_END_REPO $API_WEB_ROOT
 
 # Otherwise link the shared folder to supply code
 else
-    # Link API root to Apache2's expected path (if needed)
+    # Link API root to Nginx's expected path (if needed)
     if ! [ -L $API_WEB_ROOT ]; then
       rm -rf $API_WEB_ROOT
       ln -fs $SHARE_ROOT $API_WEB_ROOT
@@ -88,7 +85,7 @@ fi
 # Run composer (download dependencies)
 composer --working-dir=$API_WEB_ROOT install
 
-################################################## APACHE CONFIG ##################################################
+################################################## NGINX CONFIG ##################################################
 
 # Destroy default site (if needed)
 if [ -L $DEFAULT_SITE_PATH ]; then
@@ -97,11 +94,20 @@ fi
 
 # Create virtual server configs (link if dev copy if production)
 if [ $MODE = $DEV_MODE ]; then
-    ln -fs $API_WEB_ROOT/api.conf /etc/apache2/sites-enabled/api.dashidashcam.com.conf
-    #ln -fs $API_WEB_ROOT/insecurity.conf /etc/apache2/sites-enabled/dashidashcam.com.conf
+    ln -fs "$API_WEB_ROOT/api.$DOMAIN" "/etc/nginx/sites-available/api.$DOMAIN"
+    if ! [ -z ${FRONT_END_REPO+x} ]; then
+        ln -fs "$FRONT_END_WEB_ROOT/$DOMAIN" "/etc/nginx/sites-available/$DOMAIN"
+    fi
 else
-    cp $API_WEB_ROOT/api.conf /etc/apache2/sites-enabled/api.dashidashcam.com.conf
-    #cp $API_WEB_ROOT/insecurity.conf /etc/apache2/sites-enabled/dashidashcam.com.conf
+    cp "$API_WEB_ROOT/api.$DOMAIN" "/etc/nginx/sites-available/api.$DOMAIN"
+    if ! [ -z ${FRONT_END_REPO+x} ]; then
+        cp "$FRONT_END_WEB_ROOT/$DOMAIN" "/etc/nginx/sites-available/$DOMAIN"
+    fi
+fi
+
+ln -fs "/etc/nginx/sites-available/api.$DOMAIN" "/etc/nginx/sites-enabled/api.$DOMAIN"
+if ! [ -z ${FRONT_END_REPO+x} ]; then
+    ln -fs "/etc/nginx/sites-available/$DOMAIN" "/etc/nginx/sites-enabled/$DOMAIN"
 fi
 
 # Configure web root permissions if in dev mode
@@ -112,23 +118,24 @@ then
     chmod -R g+rw /var/www
 fi
 
-# Enable Apache mod_rewrite
-a2enmod rewrite
-
 ################################################## RESTART SERVICES ##################################################
 
-# Restart Apache2
-service apache2 restart
+# Restart Nginx
+service nginx restart
 
 ################################################## MYSQL CONFIG ##################################################
 
 
 if [ $MODE = $PRODUCTION_MODE ]; then
     # Remove debug signal
-    rm "$API_WEB_ROOT/debug_mode"
+    if [ -L "$API_WEB_ROOT/debug_mode" ]; then
+        rm "$API_WEB_ROOT/debug_mode"
+    fi
 
-    # Modifies the passwords in source code of core.php and scanner.py
-    bash $API_WEB_ROOT/cred_config.sh $API_USER_PASSWORD
+    # Modifies the passwords in source code according to custom script (including sql file)
+    if [ -L "$API_WEB_ROOT/cred_config.sh" ]; then
+        bash $API_WEB_ROOT/cred_config.sh
+    fi
 fi
 
 # Use tmp file to securely supply mysql password
@@ -137,17 +144,8 @@ trap 'rm -f "$OPTFILE"' EXIT
 chmod 0600 "$OPTFILE"
 cat >"$OPTFILE" <<EOF
 [client]
-password="${PASSWORD}"
+password="${DB_PASSWORD}"
 EOF
 
 # Build the database schema
 mysql --defaults-extra-file="$OPTFILE" --user="root" < "$API_WEB_ROOT/schema.sql"
-
-# Create API user in db
-mysql --defaults-extra-file="$OPTFILE" --user="root" Dashi <<EOF
-CREATE USER 'api'@'localhost' IDENTIFIED BY '$API_USER_PASSWORD';
-GRANT SELECT ON Dashi.* TO 'api'@'localhost';
-GRANT UPDATE ON Dashi.* TO 'api'@'localhost';
-GRANT INSERT ON Dashi.* TO 'api'@'localhost';
-GRANT DELETE ON Dashi.* TO 'api'@'localhost';
-EOF

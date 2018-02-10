@@ -44,3 +44,9 @@ CREATE TABLE Auth_Tokens (
   FOREIGN KEY (accountID) REFERENCES Accounts (id),
   FOREIGN KEY (typeID) REFERENCES Token_Types (id)
 );
+
+CREATE USER 'api'@'localhost' IDENTIFIED BY 'password';
+GRANT SELECT ON Dashi.* TO 'api'@'localhost';
+GRANT UPDATE ON Dashi.* TO 'api'@'localhost';
+GRANT INSERT ON Dashi.* TO 'api'@'localhost';
+GRANT DELETE ON Dashi.* TO 'api'@'localhost';

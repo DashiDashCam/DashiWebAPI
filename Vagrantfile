@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
   # Use the bash provisioning script to configure the vm
   config.vm.provision "shell" do |s|
     s.path = "provision.sh"
-    s.args = "/vagrant password DEV"
+    s.args = "/vagrant/dev_provision.conf"
   end
 
   # Forward port
