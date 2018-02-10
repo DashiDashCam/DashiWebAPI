@@ -78,7 +78,7 @@ $app->group('/Account', function () use ($app) {
             try {
                 $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
                 $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
-                $stmt->bindValue(':id', base64_decode($data['thumbnail']), PDO::PARAM_LOB);
+                $stmt->bindValue(':thumbnail', base64_decode($data['thumbnail']), PDO::PARAM_LOB);
                 $stmt->bindValue(':started', $data['started']);
                 $stmt->bindValue(':size', $data['size']);
                 $stmt->bindValue(':length', $data['length']);
