@@ -177,6 +177,20 @@ $app->group('/Account', function () use ($app) {
 
     $app->get('/Videos/{id}/content', function (Request $request, Response $response, $args) {
 
+        // Ensure ID is a valid SHA256 hash
+        if (!ctype_xdigit($args['id']) || strlen($args['id']) != 64) {
+            return $response->withJson([
+                'code' => 1024,
+                'message' => 'Validation Failed',
+                'description' => 'The provided input does not meet the required JSON schema',
+                'errors' => [
+                    'code' => 1650,
+                    'field' => 'id',
+                    'message' => 'ID must be hex representation of valid SHA256 hash'
+                ]
+            ], 400);
+        }
+
         $stmt = $this->db->prepare("SELECT videoContent, accountID FROM Videos WHERE id=:id");
 
         $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
