@@ -200,7 +200,7 @@ $app->group('/Account', function () use ($app) {
         $row = $stmt->fetch();
 
         if ($row && $row['accountID'] == $request->getAttribute('accountID')) {
-            return $response->withJson($row['videoContent']);
+            return $response->getBody()->write($row['videoContent']);
         }
         else {
             return $response->withJson([
