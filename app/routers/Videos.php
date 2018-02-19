@@ -10,7 +10,10 @@ $app->group('/Account', function () use ($app) {
     $app->get('/Videos', function (Request $request, Response $response) use ($app) {
 
         // Get meta data for all of user's videos
-        $stmt = $this->db->prepare("SELECT id, thumbnail, started, `size`, `length` FROM Videos WHERE accountID=:accountID;");
+        $stmt = $this->db->prepare("SELECT id, thumbnail, started, `size`, `length`,
+            startLat, startLong, endLat, endLong 
+            FROM Videos WHERE accountID=:accountID;
+        ");
 
         $stmt->execute(['accountID' => $request->getAttribute('accountID')]);
 
@@ -31,8 +34,8 @@ $app->group('/Account', function () use ($app) {
         $data = $request->getParsedBody();
 
         $stmt = $this->db->prepare("
-            INSERT INTO Videos (id, accountID, thumbnail, started, `size`, `length`) 
-            VALUES (:id, :accountID, :thumbnail, :started, :size, :length);
+            INSERT INTO Videos (id, accountID, thumbnail, started, `size`, `length`, startLat, startLong, endLat, endLong) 
+            VALUES (:id, :accountID, :thumbnail, :started, :size, :length, :startLat, :startLong, :endLat, :endLong);
         ");
 
         $errors = [];
@@ -73,6 +76,34 @@ $app->group('/Account', function () use ($app) {
                 'message' => 'Must provide length (in seconds)'
             ];
         }
+        if (!isset($data['startLong'])) {
+            $errors[] = [
+                'code' => 1072,
+                'field' => 'startLong',
+                'message' => 'Must provide starting GPS Longitude'
+            ];
+        }
+        if (!isset($data['startLat'])) {
+            $errors[] = [
+                'code' => 1072,
+                'field' => 'startLat',
+                'message' => 'Must provide starting GPS Latitude'
+            ];
+        }
+        if (!isset($data['endLong'])) {
+            $errors[] = [
+                'code' => 1072,
+                'field' => 'endLong',
+                'message' => 'Must provide ending GPS Longitude'
+            ];
+        }
+        if (!isset($data['endLat'])) {
+            $errors[] = [
+                'code' => 1072,
+                'field' => 'endLat',
+                'message' => 'Must provide ending GPS Latitude'
+            ];
+        }
 
         if (count($errors) == 0) {
             try {
@@ -82,6 +113,10 @@ $app->group('/Account', function () use ($app) {
                 $stmt->bindValue(':started', $data['started']);
                 $stmt->bindValue(':size', $data['size']);
                 $stmt->bindValue(':length', $data['length']);
+                $stmt->bindValue(':startLat', $data['startLat']);
+                $stmt->bindValue(':startLong', $data['startLong']);
+                $stmt->bindValue(':endLat', $data['endLat']);
+                $stmt->bindValue(':endLong', $data['endLong']);
 
                 $stmt->execute();
 

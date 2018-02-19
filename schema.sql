@@ -18,6 +18,10 @@ CREATE TABLE Videos (
   started      DATETIME   NOT NULL,
   size         INT        NOT NULL,
   length       INT        NOT NULL,
+  startLat     FLOAT    DEFAULT NULL,
+  startLong    FLOAT    DEFAULT NULL,
+  endLat       FLOAT    DEFAULT NULL,
+  endLong      FLOAT    DEFAULT NULL
   PRIMARY KEY (id),
   FOREIGN KEY (accountID) REFERENCES Accounts (id)
 );
