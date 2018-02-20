@@ -21,7 +21,7 @@ CREATE TABLE Videos (
   startLat     FLOAT    DEFAULT NULL,
   startLong    FLOAT    DEFAULT NULL,
   endLat       FLOAT    DEFAULT NULL,
-  endLong      FLOAT    DEFAULT NULL
+  endLong      FLOAT    DEFAULT NULL,
   PRIMARY KEY (id),
   FOREIGN KEY (accountID) REFERENCES Accounts (id)
 );
