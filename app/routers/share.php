@@ -5,7 +5,7 @@ use \Slim\Http\Response as Response;
 
 require_once __DIR__ . '/../middleware/Auth.php';
 
-$app->get('/Share/{id}', function (Request $request, Response $response) use ($app) {
+$app->get('/Share/{id}', function (Request $request, Response $response, $args) use ($app) {
 
     $stmt = $this->db->prepare("SELECT videoContent FROM Shares JOIN Videos ON Shares.videoID=Videos.id WHERE Shares.id=:id");
 
