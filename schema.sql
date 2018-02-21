@@ -26,6 +26,13 @@ CREATE TABLE Videos (
   FOREIGN KEY (accountID) REFERENCES Accounts (id)
 );
 
+CREATE TABLE Shares (
+  id      BINARY(256) UNIQUE NOT NULL,
+  videoID INT                NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (videoID) REFERENCES Videos (id)
+);
+
 CREATE TABLE Token_Types (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   type VARCHAR(7) NOT NULL
