@@ -30,7 +30,7 @@ CREATE TABLE VideoChunks (
   id          INT NOT NULL AUTO_INCREMENT,
   part        INT NOT NULL,
   videoID     INT NOT NULL,
-  content     LONGBLOB DEFAULT NULL,
+  content     LONGBLOB NOT NULL,
   PRIMARY KEY (id),
   FOREIGN KEY (videoID) REFERENCES Videos (id)
 );
