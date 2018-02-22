@@ -37,7 +37,7 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
     $stmt->execute([':id' => $data['id']]);
 
     if ($row = $stmt->fetch()) {
-        $stmt = $this->db->prepare("INSERT INTO Shares (id, videoID) VALUES (:id, :videoID)");
+        $stmt = $this->db->prepare("INSERT INTO Shares (id, videoID) VALUES (:id, :videoID);");
 
         $share_id = random_bytes(256);
 

@@ -26,6 +26,15 @@ CREATE TABLE Videos (
   FOREIGN KEY (accountID) REFERENCES Accounts (id)
 );
 
+CREATE TABLE VideoChunks (
+  id          INT NOT NULL AUTO_INCREMENT,
+  part        INT NOT NULL,
+  videoID     INT NOT NULL,
+  content     LONGBLOB DEFAULT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (videoID) REFERENCES Videos (id)
+);
+
 CREATE TABLE Shares (
   id      BINARY(256) UNIQUE NOT NULL,
   videoID INT                NOT NULL,

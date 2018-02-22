@@ -178,8 +178,29 @@ $app->group('/Account', function () use ($app) {
         $stmt->execute();
 
         if ($row = $stmt->fetch()) {
-            if ($offset = $request->getQueryParam('offset'))
-                $videoContent = $row['videoContent'] . $videoContent;
+            if ($offset = $request->getQueryParam('offset')) {
+                if ($offset == -1) {
+                    $stmt = $this->db->prepare("SELECT content FROM VideoChunks WHERE videoID=:videoID ORDER BY part;");
+
+                    $stmt->execute();
+
+                    $videoContent = '';
+
+                    while($row = $stmt->fetch())
+                        $videoContent = $videoContent . $row['videoContent'];
+                }
+                else {
+                    $stmt = $this->db->prepare("INSERT INTO VideoChunks (part, videoID, content)
+                        VALUES (:part, :videoID, :content);
+                    ");
+
+                    $stmt->execute([
+                        ':part' => $offset,
+                        ':videoID' => $args['id'],
+                        ':content' => $videoContent
+                    ]);
+                }
+            }
         }
         else {
             $notFound = true;
