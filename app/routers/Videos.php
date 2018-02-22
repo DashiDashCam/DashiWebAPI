@@ -199,14 +199,12 @@ $app->group('/Account', function () use ($app) {
                         ':videoID' => $args['id'],
                         ':content' => $videoContent
                     ]);
+
+                    return $response->withStatus(200);
                 }
             }
-        }
-        else {
-            $notFound = true;
-        }
 
-        if (!$notFound) {
+            // Push the complete video into the db
             $stmt = $this->db->prepare("UPDATE Videos SET videoContent=:video WHERE id=:id AND accountID=:accountID;");
 
             try {
@@ -216,18 +214,19 @@ $app->group('/Account', function () use ($app) {
 
                 $stmt->execute();
 
-                return $response->withStatus(200);
+                return $response->withStatus(201);
 
             } catch (PDOException $e) {
                 $notFound = true;
             }
         }
-
-        return $response->withJson([
-            'code' => 1054,
-            'message' => 'Video Not Found',
-            'description' => 'The provided video id is either invalid or you lack sufficient authorization'
-        ], 404);
+        else {
+            return $response->withJson([
+                'code' => 1054,
+                'message' => 'Video Not Found',
+                'description' => 'The provided video id is either invalid or you lack sufficient authorization'
+            ], 404);
+        }
 
     })->setName('uploadVideoContent');
 
