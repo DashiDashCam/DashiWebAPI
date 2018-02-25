@@ -39,7 +39,7 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
     if ($row = $stmt->fetch()) {
         $stmt = $this->db->prepare("INSERT INTO Shares (id, videoID) VALUES (:id, :videoID);");
 
-        $share_id = random_bytes(256);
+        $share_id = random_bytes(255);
 
         $stmt->bindValue(':id', $data['id']);
         $stmt->bindValue(':videoID', $share_id, PDO::PARAM_LOB);

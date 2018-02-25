@@ -29,15 +29,15 @@ CREATE TABLE Videos (
 CREATE TABLE VideoChunks (
   id          INT NOT NULL AUTO_INCREMENT,
   part        INT NOT NULL,
-  videoID     INT NOT NULL,
+  videoID     BINARY(32) NOT NULL,
   content     LONGBLOB NOT NULL,
   PRIMARY KEY (id),
   FOREIGN KEY (videoID) REFERENCES Videos (id)
 );
 
 CREATE TABLE Shares (
-  id      BINARY(256) UNIQUE NOT NULL,
-  videoID INT                NOT NULL,
+  id      BINARY(255) UNIQUE NOT NULL,
+  videoID BINARY(32)         NOT NULL,
   PRIMARY KEY (id),
   FOREIGN KEY (videoID) REFERENCES Videos (id)
 );

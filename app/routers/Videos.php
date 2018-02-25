@@ -188,6 +188,8 @@ $app->group('/Account', function () use ($app) {
 
                     while($row = $stmt->fetch())
                         $videoContent = $videoContent . $row['videoContent'];
+
+                    // TODO: Delete all chunks (they are now duplicates) to free up space
                 }
                 else {
                     $stmt = $this->db->prepare("INSERT INTO VideoChunks (part, videoID, content)
