@@ -172,24 +172,59 @@ $app->group('/Account', function () use ($app) {
             ], 400);
         }
 
+        // Ensure offset given
+        $offset = $request->getQueryParam('offset');
+
+        if (is_null($offset)) {
+            return $response->withJson([
+                'code' => 1024,
+                'message' => 'Validation Failed',
+                'description' => 'The provided input does not meet the required JSON schema',
+                'errors' => [
+                    'code' => 1650,
+                    'field' => 'offset',
+                    'message' => 'The video chunk offset (i.e. part) must be provided'
+                ]
+            ], 400);
+        }
+
         $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
         $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
 
         $stmt->execute();
 
         if ($row = $stmt->fetch()) {
-            if ($offset = $request->getQueryParam('offset')) {
                 if ($offset == -1) {
-                    $stmt = $this->db->prepare("SELECT content FROM VideoChunks WHERE videoID=:videoID ORDER BY part;");
+                    try {
+                        $stmt = $this->db->prepare("
+                        SET group_concat_max_len = CAST(
+                            (SELECT SUM(LENGTH(content))
+                            FROM VideoChunks
+                            WHERE videoID=:id)
+                            AS UNSIGNED
+                        );
+                        UPDATE
+                            Videos as V
+                            inner join (
+                                SELECT videoID, GROUP_CONCAT(content ORDER BY part SEPARATOR '') as videoContent
+                                FROM VideoChunks
+                                WHERE videoID=:id
+                                GROUP BY videoID
+                            ) as C on V.id = C.videoID
+                        SET V.videoContent = C.videoContent WHERE id=:id AND accountID=:accountID;
+                        ");
 
-                    $stmt->execute();
+                        $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
+                        $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
 
-                    $videoContent = '';
+                        $stmt->execute();
 
-                    while($row = $stmt->fetch())
-                        $videoContent = $videoContent . $row['videoContent'];
+                        // TODO: Delete all chunks (they are now duplicates) to free up space
 
-                    // TODO: Delete all chunks (they are now duplicates) to free up space
+                        return $response->withJSON([], 201);
+                    } catch (PDOException $e) {
+                        var_dump($e);
+                    }
                 }
                 else {
                     $stmt = $this->db->prepare("INSERT INTO VideoChunks (part, videoID, content)
@@ -198,29 +233,12 @@ $app->group('/Account', function () use ($app) {
 
                     $stmt->execute([
                         ':part' => $offset,
-                        ':videoID' => $args['id'],
+                        ':videoID' => hex2bin($args['id']),
                         ':content' => $videoContent
                     ]);
 
-                    return $response->withStatus(200);
+                    return $response->withJSON([], 200);
                 }
-            }
-
-            // Push the complete video into the db
-            $stmt = $this->db->prepare("UPDATE Videos SET videoContent=:video WHERE id=:id AND accountID=:accountID;");
-
-            try {
-                $stmt->bindValue(':video', $videoContent, PDO::PARAM_LOB);
-                $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
-                $stmt->bindValue(':accountID', $request->getAttribute('accountID'));
-
-                $stmt->execute();
-
-                return $response->withStatus(201);
-
-            } catch (PDOException $e) {
-                $notFound = true;
-            }
         }
         else {
             return $response->withJson([
