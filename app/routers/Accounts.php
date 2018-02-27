@@ -82,9 +82,9 @@ $app->post('/Accounts', function (Request $request, Response $response) use ($ap
 
             $accountID = $this->db->lastInsertId();
 
-            return $response
-                ->withStatus(201)
-                ->withHeader('Location', "/Accounts/$accountID");
+            return $response->withJson([], 201);
+                //->withStatus(201)
+                //->withHeader('Location', "/Accounts/$accountID");
 
         } catch(PDOException $e) {
             if ($e->getCode() == 23000) {

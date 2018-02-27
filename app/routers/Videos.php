@@ -120,9 +120,9 @@ $app->group('/Account', function () use ($app) {
 
                 $stmt->execute();
 
-                return $response
-                    ->withStatus(201)
-                    ->withHeader('Location', '/Videos/' . $args['id']);
+                return $response->withJson([], 201);
+                    //->withStatus(201)
+                    //->withHeader('Location', '/Videos/' . $args['id']);
             } catch (PDOException $e) {
                 if ($e->getCode() == 23000) {
                     return $response->withJson([
