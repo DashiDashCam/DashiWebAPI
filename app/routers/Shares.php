@@ -34,7 +34,9 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
 
     $stmt = $this->db->prepare("SELECT id FROM Videos WHERE id = :id;");
 
-    $stmt->execute([':id' => $data['id']]);
+    $stmt->bindValue(':id', base64_decode($data['id']), PDO::PARAM_LOB);
+
+    $stmt->execute();
 
     if ($row = $stmt->fetch()) {
         $stmt = $this->db->prepare("INSERT INTO Shares (id, videoID) VALUES (:id, :videoID);");
