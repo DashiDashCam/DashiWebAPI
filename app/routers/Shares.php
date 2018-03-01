@@ -34,7 +34,7 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
 
     $stmt = $this->db->prepare("SELECT id FROM Videos WHERE id = :id;");
 
-    $stmt->bindValue(':id', base64_decode($data['id']), PDO::PARAM_LOB);
+    $stmt->bindValue(':id', hex2bin($data['id']), PDO::PARAM_LOB);
 
     $stmt->execute();
 
