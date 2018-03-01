@@ -88,6 +88,6 @@ $app->post('/update/{project}', function (Request $request, Response $response, 
 require_once __DIR__ . '/routers/Accounts.php';
 require_once __DIR__ . '/routers/Tokens.php';
 require_once __DIR__ . '/routers/Videos.php';
-
+require_once __DIR__ . '/routers/Shares.php';
 
 $app->run();
