@@ -32,7 +32,7 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
 
     $data = $request->getParsedBody();
 
-    $stmt = $this->db->prepare("SELECT id FROM Videos WHERE id = :id;");
+    $stmt = $this->db->prepare("SELECT id FROM Videos WHERE id=:id;");
 
     $stmt->bindValue(':id', hex2bin($data['id']), PDO::PARAM_LOB);
 
@@ -43,7 +43,7 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
 
         $share_id = random_bytes(255);
 
-        $stmt->bindValue(':id', $data['id']);
+        $stmt->bindValue(':id', hex2bin($data['id']));
         $stmt->bindValue(':videoID', $share_id, PDO::PARAM_LOB);
 
         $stmt->exeucte();
