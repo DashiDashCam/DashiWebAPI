@@ -44,7 +44,7 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
         $share_id = random_bytes(255);
 
         $stmt->bindValue(':id', $share_id, PDO::PARAM_LOB);
-        $stmt->bindValue(':videoID', hex2bin($data['id']));
+        $stmt->bindValue(':videoID', hex2bin($data['id']), PDO::PARAM_LOB);
 
         $stmt->exeucte();
 
