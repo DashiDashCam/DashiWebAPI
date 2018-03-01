@@ -46,7 +46,7 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
         $stmt->bindValue(':id', $share_id, PDO::PARAM_LOB);
         $stmt->bindValue(':videoID', hex2bin($data['id']), PDO::PARAM_LOB);
 
-        $stmt->exeucte();
+        $stmt->execute();
 
         return $response->withJson([
            'shareID' => base64_encode($share_id)
