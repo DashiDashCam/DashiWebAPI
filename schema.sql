@@ -28,10 +28,10 @@ CREATE TABLE Videos (
 
 CREATE TABLE VideoChunks (
   id          INT NOT NULL AUTO_INCREMENT,
-  part        INT UNIQUE NOT NULL,
+  part        INT NOT NULL,
   videoID     BINARY(32) NOT NULL,
   content     LONGBLOB NOT NULL,
-  PRIMARY KEY (id),
+  PRIMARY KEY (id, part),
   FOREIGN KEY (videoID) REFERENCES Videos (id)
 );
 
