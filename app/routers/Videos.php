@@ -252,6 +252,8 @@ $app->group('/Account', function () use ($app) {
 
     $app->get('/Videos/{id}/content', function (Request $request, Response $response, $args) {
 
+        ini_set('memory_limit', '512M');
+
         // Ensure ID is a valid SHA256 hash
         if (!ctype_xdigit($args['id']) || strlen($args['id']) != 64) {
             return $response->withJson([
