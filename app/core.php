@@ -51,6 +51,8 @@ $container['db'] = function ($c) {
         $settings['user'], $settings['pass']);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    // Up client-side max buffer size to 1GB (to match default on MySQL server
+    $pdo->setAttribute(1002, 1073741824);
     return $pdo;
 };
 
