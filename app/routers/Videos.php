@@ -250,43 +250,43 @@ $app->group('/Account', function () use ($app) {
 
     })->setName('uploadVideoContent');
 
-    $app->get('/Videos/{id}/content', function (Request $request, Response $response, $args) {
-
-        ini_set('memory_limit', '512M');
-
-        // Ensure ID is a valid SHA256 hash
-        if (!ctype_xdigit($args['id']) || strlen($args['id']) != 64) {
-            return $response->withJson([
-                'code' => 1024,
-                'message' => 'Validation Failed',
-                'description' => 'The provided input does not meet the required JSON schema',
-                'errors' => [
-                    'code' => 1650,
-                    'field' => 'id',
-                    'message' => 'ID must be hex representation of valid SHA256 hash'
-                ]
-            ], 400);
-        }
-
-        $stmt = $this->db->prepare("SELECT videoContent, accountID FROM Videos WHERE id=:id");
-
-        $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
-
-        $stmt->execute();
-
-        $row = $stmt->fetch();
-
-        if ($row && $row['accountID'] == $request->getAttribute('accountID')) {
-            return $response->getBody()->write($row['videoContent']);
-        }
-        else {
-            return $response->withJson([
-                'code' => 1054,
-                'message' => 'Video Not Found',
-                'description' => 'The provided video id is either invalid or you lack sufficient authorization'
-            ], 404);
-        }
-
-    })->setName('downloadVideoContent');
-
 })->add('Authentication');
+
+$app->get('/Account/Videos/{id}/content', function (Request $request, Response $response, $args) {
+
+    ini_set('memory_limit', '512M');
+
+    // Ensure ID is a valid SHA256 hash
+    if (!ctype_xdigit($args['id']) || strlen($args['id']) != 64) {
+        return $response->withJson([
+            'code' => 1024,
+            'message' => 'Validation Failed',
+            'description' => 'The provided input does not meet the required JSON schema',
+            'errors' => [
+                'code' => 1650,
+                'field' => 'id',
+                'message' => 'ID must be hex representation of valid SHA256 hash'
+            ]
+        ], 400);
+    }
+
+    $stmt = $this->db->prepare("SELECT videoContent, accountID FROM Videos WHERE id=:id");
+
+    $stmt->bindValue(':id', hex2bin($args['id']), PDO::PARAM_LOB);
+
+    $stmt->execute();
+
+    $row = $stmt->fetch();
+
+    if ($row) {//} && $row['accountID'] == $request->getAttribute('accountID')) {
+        return $response->getBody()->write($row['videoContent']);
+    }
+    else {
+        return $response->withJson([
+            'code' => 1054,
+            'message' => 'Video Not Found',
+            'description' => 'The provided video id is either invalid or you lack sufficient authorization'
+        ], 404);
+    }
+
+})->setName('downloadVideoContent');
