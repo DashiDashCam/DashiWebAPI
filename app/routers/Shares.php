@@ -16,7 +16,10 @@ $app->get('/Share/{id}', function (Request $request, Response $response, $args) 
     $row = $stmt->fetch();
 
     if ($row) {
-        return $response->getBody()->write($row['videoContent']);
+        return $response->getBody()->write($row['videoContent'])
+            ->withHeader('Content-Type', 'video/quicktime')
+            ->withHeader('Content-Transfer-Encoding', 'binary')
+            ->withHeader('Content-Disposition', 'inline; filename="' . basename('dashi_video.MOV') . '"');
     }
     else {
         return $response->withJson([
