@@ -18,7 +18,7 @@ $app->get('/Share/{id}', function (Request $request, Response $response, $args) 
     if ($row) {
         $response->getBody()->write($row['videoContent']);
 
-        return->withHeader('Content-Type', 'video/quicktime')
+        return $response->withHeader('Content-Type', 'video/quicktime')
             ->withHeader('Content-Transfer-Encoding', 'binary')
             ->withHeader('Content-Disposition', 'inline; filename="' . basename('dashi_video.MOV') . '"');
     }
@@ -53,7 +53,7 @@ $app->post('/Share', function (Request $request, Response $response) use ($app) 
         $stmt->execute();
 
         return $response->withJson([
-           'shareID' => base64_encode($share_id)
+           'shareID' => urlencode(base64_encode($share_id))
         ]);
     }
     else {
